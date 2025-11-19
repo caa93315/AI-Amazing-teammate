@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG小貓戰爭</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            width: 800px;
+            height: 600px;
+            background: #2c3e50;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .game-header {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .game-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 14px;
+        }
+
+        .battle-arena {
+            height: 400px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .player-cat {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            left: 50px;
+            top: 160px;
+        }
+
+        .enemy-cat {
+            background: linear-gradient(45deg, #4834d4, #686de0);
+            right: 50px;
+            top: 160px;
+        }
+
+        .character:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .character-name {
+            font-size: 10px;
+            margin-bottom: 5px;
+        }
+
+        .character-hp {
+            font-size: 8px;
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .battle-controls {
+            background: #34495e;
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .action-button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .action-button.attack {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        .action-button.defend {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+        }
+
+        .action-button.skill {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        }
+
+        .action-button.heal {
+            background: linear-gradient(45deg, #27ae60, #229954);
+        }
+
+        .battle-log {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 80px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .damage-text {
+            position: absolute;
+            color: #ff6b6b;
+            font-weight: bold;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            animation: damageFloat 1s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes damageFloat {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .restart-button {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .cat-emoji {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="game-title">? RPG小貓戰爭 ?</div>
+            <div class="game-stats">
+                <div>回合: <span id="turn-count">1</span></div>
+                <div>玩家HP: <span id="player-hp">100</span>/100</div>
+                <div>敵人HP: <span id="enemy-hp">100</span>/100</div>
+            </div>
+        </div>
+
+        <div class="battle-arena">
+            <div class="character player-cat" id="player">
+                <div class="cat-emoji">?</div>
+                <div class="character-name">小勇士</div>
+                <div class="character-hp" id="player-hp-display">100/100</div>
+            </div>
+            <div class="character enemy-cat" id="enemy">
+                <div class="cat-emoji">???</div>
+                <div class="character-name">黑暗貓王</div>
+                <div class="character-hp" id="enemy-hp-display">100/100</div>
+            </div>
+            <div class="battle-log" id="battle-log">
+                <div class="log-entry">戰鬥開始！小勇士 VS 黑暗貓王</div>
+            </div>
+        </div>
+
+        <div class="battle-controls">
+            <button class="action-button attack" onclick="playerAction('attack')">攻擊</button>
+            <button class="action-button defend" onclick="playerAction('defend')">防禦</button>
+            <button class="action-button skill" onclick="playerAction('skill')">技能</button>
+            <button class="action-button heal" onclick="playerAction('heal')">治療</button>
+        </div>
+
+        <div class="game-over" id="game-over">
+            <h2 id="game-result">遊戲結束</h2>
+            <p id="game-message"></p>
+            <button class="restart-button" onclick="restartGame()">重新開始</button>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲狀態
+        let gameState = {
+            player: {
+                hp: 100,
+                maxHp: 100,
+                attack: 15,
+                defense: 5,
+                isDefending: false
+            },
+            enemy: {
+                hp: 100,
+                maxHp: 100,
+                attack: 12,
+                defense: 3,
+                isDefending: false
+            },
+            turn: 1,
+            gameOver: false,
+            playerTurn: true
+        };
+
+        // 更新顯示
+        function updateDisplay() {
+            document.getElementById('player-hp').textContent = gameState.player.hp;
+            document.getElementById('enemy-hp').textContent = gameState.enemy.hp;
+            document.getElementById('player-hp-display').textContent = gameState.player.hp + '/' + gameState.player.maxHp;
+            document.getElementById('enemy-hp-display').textContent = gameState.enemy.hp + '/' + gameState.enemy.maxHp;
+            document.getElementById('turn-count').textContent = gameState.turn;
+        }
+
+        // 添加戰鬥日誌
+        function addLog(message) {
+            const log = document.getElementById('battle-log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = message;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // 顯示傷害文字
+        function showDamage(target, damage) {
+            const targetElement = document.getElementById(target);
+            const damageText = document.createElement('div');
+            damageText.className = 'damage-text';
+            damageText.textContent = '-' + damage;
+            damageText.style.left = targetElement.offsetLeft + 40 + 'px';
+            damageText.style.top = targetElement.offsetTop + 'px';
+            
+            document.querySelector('.battle-arena').appendChild(damageText);
+            
+            setTimeout(function() {
+                damageText.remove();
+            }, 1000);
+        }
+
+        // 玩家行動
+        function playerAction(action) {
+            if (gameState.gameOver || !gameState.playerTurn) return;
+
+            let message = '';
+            let damage = 0;
+
+            switch(action) {
+                case 'attack':
+                    damage = Math.max(1, gameState.player.attack - gameState.enemy.defense + Math.floor(Math.random() * 10) - 5);
+                    gameState.enemy.hp = Math.max(0, gameState.enemy.hp - damage);
+                    message = '小勇士攻擊造成 ' + damage + ' 點傷害！';
+                    showDamage('enemy', damage);
+                    break;
+                
+                case 'defend':
+                    gameState.player.isDefending = true;
+                    message = '小勇士採取防禦姿勢！';
+                    break;
+                
+                case 'skill':
+                    damage = Math.max(1, gameState.player.attack * 1.5 - gameState.enemy.defense + Math.floor(Math.random() * 5) - 2);
+                    gameState.enemy.hp = Math.max(0, gameState.enemy.hp - damage);
+                    message = '小勇士使用貓咪拳造成 ' + damage + ' 點傷害！';
+                    showDamage('enemy', damage);
+                    break;
+                
+                case 'heal':
+                    const healAmount = 20 + Math.floor(Math.random() * 10);
+                    gameState.player.hp = Math.min(gameState.player.maxHp, gameState.player.hp + healAmount);
+                    message = '小勇士恢復 ' + healAmount + ' 點HP！';
+                    break;
+            }
+
+            addLog(message);
+            gameState.playerTurn = false;
+            updateDisplay();
+
+            // 檢查遊戲結束
+            if (gameState.enemy.hp <= 0) {
+                endGame(true);
+                return;
+            }
+
+            // 敵人行動
+            setTimeout(function() {
+                enemyAction();
+            }, 1000);
+        }
+
+        // 敵人行動
+        function enemyAction() {
+            if (gameState.gameOver) return;
+
+            const actions = ['attack', 'attack', 'defend', 'skill'];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            
+            let message = '';
+            let damage = 0;
+
+            switch(action) {
+                case 'attack':
+                    damage = Math.max(1, gameState.enemy.attack - gameState.player.defense + Math.floor(Math.random() * 8) - 4);
+                    if (gameState.player.isDefending) {
+                        damage = Math.floor(damage / 2);
+                        gameState.player.isDefending = false;
+                    }
+                    gameState.player.hp = Math.max(0, gameState.player.hp - damage);
+                    message = '黑暗貓王攻擊造成 ' + damage + ' 點傷害！';
+                    showDamage('player', damage);
+                    break;
+                
+                case 'defend':
+                    gameState.enemy.isDefending = true;
+                    message = '黑暗貓王採取防禦姿勢！';
+                    break;
+                
+                case 'skill':
+                    damage = Math.max(1, gameState.enemy.attack * 1.3 - gameState.player.defense + Math.floor(Math.random() * 6) - 3);
+                    if (gameState.player.isDefending) {
+                        damage = Math.floor(damage / 2);
+                        gameState.player.isDefending = false;
+                    }
+                    gameState.player.hp = Math.max(0, gameState.player.hp - damage);
+                    message = '黑暗貓王使用暗影爪造成 ' + damage + ' 點傷害！';
+                    showDamage('player', damage);
+                    break;
+            }
+
+            addLog(message);
+            gameState.turn++;
+            gameState.playerTurn = true;
+            updateDisplay();
+
+            // 檢查遊戲結束
+            if (gameState.player.hp <= 0) {
+                endGame(false);
+            }
+        }
+
+        // 遊戲結束
+        function endGame(playerWon) {
+            gameState.gameOver = true;
+            const gameOverDiv = document.getElementById('game-over');
+            const resultElement = document.getElementById('game-result');
+            const messageElement = document.getElementById('game-message');
+
+            if (playerWon) {
+                resultElement.textContent = '? 勝利！';
+                messageElement.textContent = '恭喜！小勇士擊敗了黑暗貓王！';
+            } else {
+                resultElement.textContent = '? 失敗！';
+                messageElement.textContent = '很遺憾，小勇士被黑暗貓王擊敗了...';
+            }
+
+            gameOverDiv.style.display = 'block';
+        }
+
+        // 重新開始遊戲
+        function restartGame() {
+            gameState = {
+                player: {
+                    hp: 100,
+                    maxHp: 100,
+                    attack: 15,
+                    defense: 5,
+                    isDefending: false
+                },
+                enemy: {
+                    hp: 100,
+                    maxHp: 100,
+                    attack: 12,
+                    defense: 3,
+                    isDefending: false
+                },
+                turn: 1,
+                gameOver: false,
+                playerTurn: true
+            };
+
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('battle-log').innerHTML = '<div class="log-entry">戰鬥重新開始！小勇士 VS 黑暗貓王</div>';
+            updateDisplay();
+        }
+
+        // 初始化遊戲
+        updateDisplay();
+    </script>
+</body>
+</html>
